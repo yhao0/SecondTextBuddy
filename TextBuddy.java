@@ -27,6 +27,7 @@ public class TextBuddy {
 	private static final String SUCCESS_IN_ADDING_ITEM = "added to %1$s: \"%2$s\"";
 	private static final String SUCCESS_IN_DELETING_ITEM = "deleted from %1$s: \"%2$s\"";	
 	private static final String SUCCESS_IN_CLEARING = "all content deleted from %1$s";
+	private static final String SUCCESS_IN_SORTING = "all content sorted alphabetically";
 	
 	private static final String EMPTY_FILE = "%1$s is empty.";
 	private static final String GIVE_YOUR_COMMAND = "command: ";
@@ -34,13 +35,13 @@ public class TextBuddy {
 	
 	private static Scanner sc = new Scanner(System.in);
 	
-	private static ArrayList<String> list = new ArrayList<String>();
+	protected static ArrayList<String> list = new ArrayList<String>();
 
 	private static String fileName;
 	
 	//Possible command types
 	enum COMMAND_TYPE {
-		ADD_ITEM, DELETE_ITEM, CLEAR_ITEM, DISPLAY_ITEM, WRONG_COMMAND
+		ADD_ITEM, DELETE_ITEM, CLEAR_ITEM, DISPLAY_ITEM, WRONG_COMMAND, SORT_COMMAND
 	};
 
 	public static void main(String[] args) {
@@ -62,13 +63,13 @@ public class TextBuddy {
 	public static void executeCommand(String userCommand, String fileName) {
 
 		COMMAND_TYPE commandType = determineCommandType(userCommand);
-
+		String userInput = getUserInput(userCommand);
 		switch (commandType) {
 			case ADD_ITEM:
-				addItem();
+				addItem(userInput);
 				break;
 			case DELETE_ITEM:
-				deleteItem();
+				deleteItem(userInput);
 				break;
 			case CLEAR_ITEM:
 				clearItem();
@@ -79,14 +80,21 @@ public class TextBuddy {
 			case WRONG_COMMAND:
 				wrongCommand(userCommand);
 				break;
+			case SORT_COMMAND:
+				sort();
 			default:
 				//throw an error if the command is not recognized
 				throw new Error("Unrecognized command type");
 		}
 	}
+	
+	private static String getUserInput(String userCommand) {
+		String input = sc.nextLine().trim();
+		return input;
+	}
 
 	// choose the commandtype
-	private static COMMAND_TYPE determineCommandType(String commandTypeString) {
+	protected static COMMAND_TYPE determineCommandType(String commandTypeString) {
 		if (commandTypeString == null)
 			throw new Error("command type string cannot be null!");
 
@@ -161,9 +169,9 @@ public class TextBuddy {
 	 * if user gives an index that is out of bounds, throw exception
 	 */
 	
-	private static void deleteItem() {
+	private static void deleteItem(String userInput) {
 		try {
-			int indexToDelete = sc.nextInt();
+			int indexToDelete = Integer.parseInt(userInput);
 			String itemToBeDeleted = list.get(indexToDelete - 1);
 			list.remove(indexToDelete - 1);
 			showToUser(String.format(SUCCESS_IN_DELETING_ITEM, fileName, itemToBeDeleted));
@@ -217,19 +225,20 @@ public class TextBuddy {
 	}
 
 	// adds item in
-	private static void addItem() {
-		String input = sc.nextLine().trim();
-		if (isNullString(input)) {
+	protected static void addItem(String userInput) {
+		if (isNullString(userInput)) {
 			showToUser(NOTHING_TO_ADD);
 		} else {
-			list.add(input);
-			showToUser(String.format(SUCCESS_IN_ADDING_ITEM, fileName, input));
+			list.add(userInput);
+			showToUser(String.format(SUCCESS_IN_ADDING_ITEM, fileName, userInput));
 		}
 	}
 	
 	private static void sort() {
 		Collections.sort(list);
+		showToUser(SUCCESS_IN_SORTING);
 	}
+	
 	// check if string is null
 	private static boolean isNullString(String input) {
 		return input.equals("");
