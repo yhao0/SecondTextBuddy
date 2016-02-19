@@ -6,42 +6,56 @@
 
 
 
-import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.*;
 
 public class TextBuddy {
 
-	private static final String INVALID_DELETE = "Unable to delete something that isn't there.";
-	private static final String ADDING_NOTHING = "Did you forget to input something? Try again.";
-	private static final String CLEARING_NOTHING = "Nothing to clear.";
+	private static final String UNABLE_TO_DELETE = "Unable to delete something that isn't there.";
+	private static final String UNABLE_TO_WRITE_TO_FILE = "Unable to write to file";
+	private static final String UNABLE_TO_PROCESS_COMMAND = "%1$s is a wrong command input";	
+	private static final String NOTHING_TO_ADD = "Did you forget to input something? Try again.";
+	private static final String NOTHING_TO_CLEAR = "Nothing to clear.";
 	private static final String WELCOME_MESSAGE = "Welcome to TextBuddy. %1$s is ready for use.";
+	
 	private static final String SUCCESS_IN_ADDING_ITEM = "added to %1$s: \"%2$s\"";
 	private static final String SUCCESS_IN_DELETING_ITEM = "deleted from %1$s: \"%2$s\"";	
 	private static final String SUCCESS_IN_CLEARING = "all content deleted from %1$s";
+	
 	private static final String EMPTY_FILE = "%1$s is empty.";
 	private static final String GIVE_YOUR_COMMAND = "command: ";
+	private static final String DISPLAY_FORMAT = "%1$d. %2$s"; 
+	
 	private static Scanner sc = new Scanner(System.in);
+	
 	private static ArrayList<String> list = new ArrayList<String>();
 
+	private static String fileName;
+	
 	//Possible command types
 	enum COMMAND_TYPE {
 		ADD_ITEM, DELETE_ITEM, CLEAR_ITEM, DISPLAY_ITEM, WRONG_COMMAND
 	};
 
 	public static void main(String[] args) {
-		String fileName = args[0];
+		fileName = args[0];
+		readFile(fileName);
 		showToUser(String.format(WELCOME_MESSAGE, fileName));
 		
 		String command = userGiveCommand();
 
-		while(carryOn(command)) {
+		while(canCarryOn(command)) {
 			executeCommand(command, fileName);
 			command = userGiveCommand();
 		}
 		
-		commitToFile(fileName);
+		commitToFile();
 		sc.close();
 	}
 	
@@ -51,16 +65,16 @@ public class TextBuddy {
 
 		switch (commandType) {
 			case ADD_ITEM:
-				addItem(fileName);
+				addItem();
 				break;
 			case DELETE_ITEM:
-				deleteItem(fileName);
+				deleteItem();
 				break;
 			case CLEAR_ITEM:
-				clearItem(fileName);
+				clearItem();
 				break;
 			case DISPLAY_ITEM:
-				displayItem(fileName);
+				displayItem();
 				break;
 			case WRONG_COMMAND:
 				wrongCommand(userCommand);
@@ -90,25 +104,55 @@ public class TextBuddy {
 	}
 	
 	// create and write to file after exiting
-	private static void commitToFile(String fileName) {
+	private static void commitToFile() {
 		try {
 			FileOutputStream outFile = new FileOutputStream(fileName);  
-			BufferedOutputStream bos = new BufferedOutputStream(outFile);
-			writeToFile(bos);
+			OutputStreamWriter outputWriter = new OutputStreamWriter(outFile);
+			BufferedWriter writer = new BufferedWriter(outputWriter);
+			writeToFile(writer);
+			writer.close();
+			outFile.close();
+			outputWriter.close();
 		} catch (IOException e) {
-			System.out.println("Unable to write to file");
+			showToUser(UNABLE_TO_WRITE_TO_FILE);
 		}
 	}
 
-	private static void writeToFile(BufferedOutputStream bos) throws IOException {
+	private static void writeToFile(BufferedWriter writer) throws IOException {
 		int index = 1; 
 		while (index - 1 < list.size()) {
 			String input = index + ". " + list.get(index - 1) + "\n";
-			byte[] bytes = input.getBytes();
-			bos.write(bytes);
+			writer.write(input);
 			index++;
 		}
-		bos.close();
+	}
+	
+	private static void readFile(String fileName) {
+		try {
+			createFile(fileName);
+			FileReader inputFile = new FileReader(fileName);
+			BufferedReader reader = new BufferedReader(inputFile);
+			
+			String currentLine = reader.readLine();
+			while(currentLine != null) {
+				list.add(currentLine);
+				currentLine = reader.readLine();
+			}
+			reader.close();
+		} catch (IOException e) {
+			
+		}
+	}
+	
+	private static void createFile(String fileName) {
+		try {
+			File file = new File(fileName);
+			if (!file.exists()) {
+				file.createNewFile();
+			}
+		} catch (IOException e) {
+			
+		}
 	}
 	
 	/* 
@@ -117,48 +161,49 @@ public class TextBuddy {
 	 * if user gives an index that is out of bounds, throw exception
 	 */
 	
-	private static void deleteItem(String fileName) {
+	private static void deleteItem() {
 		try {
 			int indexToDelete = sc.nextInt();
 			String itemToBeDeleted = list.get(indexToDelete - 1);
 			list.remove(indexToDelete - 1);
 			showToUser(String.format(SUCCESS_IN_DELETING_ITEM, fileName, itemToBeDeleted));
 		} catch (IndexOutOfBoundsException e) {
-			showToUser(INVALID_DELETE);
+			showToUser(UNABLE_TO_DELETE);
 		} catch (InputMismatchException e) {
 			sc.nextLine(); // since the input is not a number, we need to consume the remaining line
-			showToUser(INVALID_DELETE);
+			showToUser(UNABLE_TO_DELETE);
 		}
 	}
 	
 	private static void wrongCommand(String command) {
 		sc.nextLine(); // since the command is wrong, we need to consume the remaining line
-		System.out.println(command + " is a wrong command input.");
+		showToUser(UNABLE_TO_PROCESS_COMMAND);
 	}	
 
 	// clear the whole list
-	private static void clearItem(String fileName) {
+	private static void clearItem() {
 		if (list.size() != 0) {
 			list.clear();
 			showToUser(String.format(SUCCESS_IN_CLEARING, fileName));
 		} else {
-			showToUser(CLEARING_NOTHING);
+			showToUser(NOTHING_TO_CLEAR);
 		}
 	}
 	
 	// print out everything in the list
-	private static void displayItem(String fileName) {
+	private static void displayItem() {
 		if (list.size() != 0) {
 			int index = 1;
 			while (index - 1 < list.size()){
-				System.out.println(""+ index+". "+list.get(index - 1));
+				String input = list.get(index - 1);
+				showToUser(String.format(DISPLAY_FORMAT, index, input));
 				index++;
 			}
 		} else {
 			showToUser(String.format(EMPTY_FILE, fileName));
 		}
 	}
-	
+
 	// ask user for command
 	private static String userGiveCommand() {
 		showCommandToUser(GIVE_YOUR_COMMAND);
@@ -167,25 +212,29 @@ public class TextBuddy {
 	}
 	
 	// check if command is exit
-	private static boolean carryOn(String command) {
+	private static boolean canCarryOn(String command) {
 		return !command.equals("exit");
 	}
 
 	// adds item in
-	private static void addItem(String fileName) {
+	private static void addItem() {
 		String input = sc.nextLine().trim();
 		if (isNullString(input)) {
-			showToUser(ADDING_NOTHING);
+			showToUser(NOTHING_TO_ADD);
 		} else {
 			list.add(input);
 			showToUser(String.format(SUCCESS_IN_ADDING_ITEM, fileName, input));
 		}
 	}
 	
+	private static void sort() {
+		Collections.sort(list);
+	}
 	// check if string is null
 	private static boolean isNullString(String input) {
 		return input.equals("");
 	}
+	
 	private static void showToUser(String text) {
 		System.out.println(text);
 	}
