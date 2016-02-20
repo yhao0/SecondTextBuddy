@@ -5,6 +5,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 
 import org.junit.*;
+import org.omg.CORBA.INITIALIZE;
 
 
 public class TextBuddyTest {
@@ -15,6 +16,12 @@ public class TextBuddyTest {
 	public void setup(){
 		buddy = new TextBuddy();
 		arrayList = new ArrayList<String>();
+	}
+	
+	public void makeTestList(int number) {
+		for (int i = 0; i < number; i++) {
+			arrayList.add(String.valueOf(i));
+		}
 	}
 
 	@Test
@@ -29,14 +36,22 @@ public class TextBuddyTest {
 	
 	@Test
 	public void testAddCommand() {
+		buddy.addItem("0");
+		makeTestList(3);
 		buddy.addItem("1");
-		arrayList.add("1");
+		buddy.addItem("2");
 		assertEquals(arrayList, buddy.list);
-		buddy.addItem("me");
-		buddy.addItem("haha");
-		arrayList.add("me");
-		arrayList.add("haha");
+	}
+	
+	@Test
+	public void testClearCommand() {
+		buddy.addItem("0");
+		makeTestList(3);
+		buddy.addItem("1");
+		buddy.addItem("2");	
 		assertEquals(arrayList, buddy.list);
+		buddy.clearItem();
+		assertEquals(0, buddy.list.size());
 	}
 
 
