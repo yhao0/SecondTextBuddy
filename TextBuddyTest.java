@@ -3,6 +3,8 @@ import static org.junit.Assert.*;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 import org.junit.*;
 import org.omg.CORBA.INITIALIZE;
@@ -36,6 +38,7 @@ public class TextBuddyTest {
 	
 	@Test
 	public void testAddCommand() {
+		buddy.clearItem();
 		buddy.addItem("0");
 		makeTestList(3);
 		buddy.addItem("1");
@@ -67,5 +70,49 @@ public class TextBuddyTest {
 		makeTestList(2);
 		assertEquals(arrayList, buddy.list);
 	}
-
+	
+	@Test
+	public void testWrongCommand() {
+		buddy.clearItem();
+		String test = "wrong is a wrong command input";
+		assertEquals(test, buddy.wrongCommand("wrong"));
+	}
+	
+	@Test
+	public void testSortCommand() {
+		buddy.clearItem();
+		buddy.addItem("C");
+		buddy.addItem("B");
+		buddy.addItem("A");
+		buddy.sortItems();
+		arrayList.add("A");
+		arrayList.add("B");
+		arrayList.add("C");
+		assertEquals(arrayList, buddy.list);
+		buddy.addItem("A");
+		arrayList.add("A");
+		Collections.sort(arrayList);
+		buddy.sortItems();
+		assertEquals(arrayList, buddy.list);
+	}
+	
+	@Test
+	public void testDisplayCommand() {
+		buddy.clearItem();
+		buddy.addItem("A");
+		buddy.addItem("B");
+		String result = "1. A\n2. B\n";
+		assertEquals(result, buddy.testDisplayItem());
+	}
+	
+	@Test
+	public void testSearchCommand() {
+		buddy.clearItem();
+		buddy.addItem("CS2103 CE2");
+		buddy.addItem("CS2105 Assignment 1");
+		buddy.addItem("CS2103 recurring task");
+		buddy.addItem("CS2101 evaluation");
+		String result = "CS2103 CE2\nCS2103 recurring task\n";
+		assertEquals(result, buddy.searchItem("CS2103"));
+	}
 }

@@ -30,8 +30,9 @@ public class TextBuddy {
 	private static final String SUCCESS_IN_SORTING = "all content sorted alphabetically";
 	
 	private static final String EMPTY_FILE = "%1$s is empty.";
+	private static final String EMPTY_STRING = "";
 	private static final String GIVE_YOUR_COMMAND = "command: ";
-	private static final String DISPLAY_FORMAT = "%1$d. %2$s"; 
+	private static final String DISPLAY_FORMAT = "%1$d. %2$s\n"; 
 	
 	private static Scanner sc = new Scanner(System.in);
 	
@@ -41,12 +42,12 @@ public class TextBuddy {
 	
 	//Possible command types
 	enum COMMAND_TYPE {
-		ADD_ITEM, DELETE_ITEM, CLEAR_ITEM, DISPLAY_ITEM, WRONG_COMMAND, SORT_COMMAND
+		ADD_ITEM, DELETE_ITEM, CLEAR_ITEM, DISPLAY_ITEM, WRONG_COMMAND, SORT_COMMAND, SEARCH_COMMAND
 	};
 
 	public static void main(String[] args) {
 		fileName = args[0];
-		readFile(fileName);
+		createFile(fileName);
 		showToUser(String.format(WELCOME_MESSAGE, fileName));
 		
 		String command = userGiveCommand();
@@ -81,7 +82,11 @@ public class TextBuddy {
 				wrongCommand(userCommand);
 				break;
 			case SORT_COMMAND:
-				sort();
+				sortItems();
+				break;
+			case SEARCH_COMMAND:
+				searchItem(userInput);
+				break;
 			default:
 				//throw an error if the command is not recognized
 				throw new Error("Unrecognized command type");
@@ -134,7 +139,7 @@ public class TextBuddy {
 			index++;
 		}
 	}
-	
+/*	
 	private static void readFile(String fileName) {
 		try {
 			createFile(fileName);
@@ -150,7 +155,7 @@ public class TextBuddy {
 		} catch (IOException e) {
 			
 		}
-	}
+	}*/
 	
 	private static void createFile(String fileName) {
 		try {
@@ -169,7 +174,7 @@ public class TextBuddy {
 	 * if user gives an index that is out of bounds, throw exception
 	 */
 	
-	private static void deleteItem(String userInput) {
+	protected static void deleteItem(String userInput) {
 		try {
 			int indexToDelete = Integer.parseInt(userInput);
 			String itemToBeDeleted = list.get(indexToDelete - 1);
@@ -183,13 +188,13 @@ public class TextBuddy {
 		}
 	}
 	
-	private static void wrongCommand(String command) {
-		sc.nextLine(); // since the command is wrong, we need to consume the remaining line
-		showToUser(UNABLE_TO_PROCESS_COMMAND);
+	protected static String wrongCommand(String command) {
+		//sc.nextLine(); // since the command is wrong, we need to consume the remaining line
+		return String.format(UNABLE_TO_PROCESS_COMMAND, command);
 	}	
 
 	// clear the whole list
-	private static void clearItem() {
+	protected static void clearItem() {
 		if (list.size() != 0) {
 			list.clear();
 			showToUser(String.format(SUCCESS_IN_CLEARING, fileName));
@@ -212,6 +217,30 @@ public class TextBuddy {
 		}
 	}
 
+	protected static String testDisplayItem() {
+		if (list.size() != 0) {
+			int index = 1;
+			String output = EMPTY_STRING; 
+			while (index - 1 < list.size()){
+				String input = list.get(index - 1);
+				output += String.format(DISPLAY_FORMAT, index, input);
+				index++;
+			}
+			return output;
+		} else {
+			return String.format(EMPTY_FILE, fileName);
+		}
+	}
+	
+	protected static String searchItem(String itemToBeSearched) {
+		String output = EMPTY_STRING;
+		for (int i = 0; i < list.size(); i++) {
+			if (list.get(i).contains(itemToBeSearched)) {
+				output += list.get(i) + "\n";
+			}
+		}
+		return output;
+	}
 	// ask user for command
 	private static String userGiveCommand() {
 		showCommandToUser(GIVE_YOUR_COMMAND);
@@ -234,7 +263,7 @@ public class TextBuddy {
 		}
 	}
 	
-	private static void sort() {
+	protected static void sortItems() {
 		Collections.sort(list);
 		showToUser(SUCCESS_IN_SORTING);
 	}
