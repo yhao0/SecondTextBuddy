@@ -45,6 +45,7 @@ public class TextBuddyTest {
 	
 	@Test
 	public void testClearCommand() {
+		buddy.clearItem();
 		buddy.addItem("0");
 		makeTestList(3);
 		buddy.addItem("1");
@@ -54,6 +55,17 @@ public class TextBuddyTest {
 		assertEquals(0, buddy.list.size());
 	}
 
-
+	@Test
+	public void testDeleteCommand() {
+		buddy.clearItem();
+		buddy.addItem("0");
+		buddy.addItem("1");
+		buddy.addItem("2");
+		assertEquals(3, buddy.list.size());
+		buddy.deleteItem("3");
+		assertEquals(2, buddy.list.size());
+		makeTestList(2);
+		assertEquals(arrayList, buddy.list);
+	}
 
 }
