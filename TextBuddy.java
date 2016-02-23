@@ -29,7 +29,7 @@ public class TextBuddy {
 	private static final String SUCCESS_IN_CLEARING = "all content deleted from %1$s";
 	private static final String SUCCESS_IN_SORTING = "all content sorted alphabetically";
 	
-	private static final String EMPTY_FILE = "%1$s is empty.";
+	private static final String EMPTY_FILE = "%1$s is empty.\n";
 	private static final String EMPTY_STRING = "";
 	private static final String GIVE_YOUR_COMMAND = "command: ";
 	private static final String DISPLAY_FORMAT = "%1$d. %2$s\n"; 
@@ -42,13 +42,11 @@ public class TextBuddy {
 	
 	//Possible command types
 	enum COMMAND_TYPE {
-		ADD_ITEM, DELETE_ITEM, CLEAR_ITEM, DISPLAY_ITEM, WRONG_COMMAND, SORT_COMMAND, SEARCH_COMMAND
+		ADD_ITEM, DELETE_ITEM, CLEAR_ITEM, DISPLAY_ITEM, WRONG_COMMAND, SORT_ITEM, SEARCH_ITEM
 	};
 
 	public static void main(String[] args) {
-		fileName = args[0];
-		createFile(fileName);
-		showToUser(String.format(WELCOME_MESSAGE, fileName));
+		initializing(args);
 		
 		String command = userGiveCommand();
 
@@ -59,6 +57,12 @@ public class TextBuddy {
 		
 		commitToFile();
 		sc.close();
+	}
+
+	private static void initializing(String[] args) {
+		fileName = args[0];
+		createFile(fileName);
+		showToUser(String.format(WELCOME_MESSAGE, fileName));
 	}
 	
 	public static void executeCommand(String userCommand, String fileName) {
@@ -76,16 +80,16 @@ public class TextBuddy {
 				clearItem();
 				break;
 			case DISPLAY_ITEM:
-				displayItem();
+				showToUserWithoutNewline(testDisplayItem());
 				break;
 			case WRONG_COMMAND:
 				wrongCommand(userCommand);
 				break;
-			case SORT_COMMAND:
+			case SORT_ITEM:
 				sortItems();
 				break;
-			case SEARCH_COMMAND:
-				searchItem(userInput);
+			case SEARCH_ITEM:
+				showToUserWithoutNewline(searchItem(userInput));
 				break;
 			default:
 				//throw an error if the command is not recognized
@@ -111,6 +115,10 @@ public class TextBuddy {
 			return COMMAND_TYPE.CLEAR_ITEM;
 		} else if (commandTypeString.equalsIgnoreCase("display")) {
 			return COMMAND_TYPE.DISPLAY_ITEM;
+		} else if (commandTypeString.equalsIgnoreCase("sort")) {
+			return COMMAND_TYPE.SORT_ITEM;
+		} else if (commandTypeString.equalsIgnoreCase("search")) {
+			return COMMAND_TYPE.SEARCH_ITEM;
 		} else {
 			return COMMAND_TYPE.WRONG_COMMAND;
 		}
@@ -275,6 +283,10 @@ public class TextBuddy {
 	
 	private static void showToUser(String text) {
 		System.out.println(text);
+	}
+	
+	private static void showToUserWithoutNewline(String text) {
+		System.out.print(text);
 	}
 
 	private static void showCommandToUser(String text) {
