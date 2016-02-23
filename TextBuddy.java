@@ -13,6 +13,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 public class TextBuddy {
@@ -20,8 +21,11 @@ public class TextBuddy {
 	private static final String UNABLE_TO_DELETE = "Unable to delete something that isn't there.";
 	private static final String UNABLE_TO_WRITE_TO_FILE = "Unable to write to file";
 	private static final String UNABLE_TO_PROCESS_COMMAND = "%1$s is a wrong command input";	
+	private static final String UNABLE_TO_CREATE_FILE = "Unable to create file";
 	private static final String NOTHING_TO_ADD = "Did you forget to input something? Try again.";
 	private static final String NOTHING_TO_CLEAR = "Nothing to clear.";
+	private static final String NOTHING_TO_SORT = "Nothing to sort.";
+	private static final String NOTHING_TO_SEARCH = "Nothing to search";
 	private static final String WELCOME_MESSAGE = "Welcome to TextBuddy. %1$s is ready for use.";
 	
 	private static final String SUCCESS_IN_ADDING_ITEM = "added to %1$s: \"%2$s\"";
@@ -32,7 +36,14 @@ public class TextBuddy {
 	private static final String EMPTY_FILE = "%1$s is empty.\n";
 	private static final String EMPTY_STRING = "";
 	private static final String GIVE_YOUR_COMMAND = "command: ";
-	private static final String DISPLAY_FORMAT = "%1$d. %2$s\n"; 
+	private static final String FORMAT_FOR_DISPLAYING = "%1$d. %2$s\n"; 
+	private static final String FORMAT_FOR_WRITING = "%1$d. %2$s\n";
+	private static final String FORMAT_FOR_SEARCHING = "%1$d. %2$s\n";
+	
+	private static final int FIRST_INDEX = 1;
+	private static final int OFFSET = 1;
+	private static final int EMPTY = 0;
+	
 	
 	private static Scanner sc = new Scanner(System.in);
 	
@@ -58,13 +69,15 @@ public class TextBuddy {
 		commitToFile();
 		sc.close();
 	}
-
+	
+	// set up the file and welcome the user
 	private static void initializing(String[] args) {
 		fileName = args[0];
 		createFile(fileName);
 		showToUser(String.format(WELCOME_MESSAGE, fileName));
 	}
 	
+	// run the commands, if wrong command will inform the user
 	public static void executeCommand(String userCommand, String fileName) {
 
 		COMMAND_TYPE commandType = determineCommandType(userCommand);
@@ -80,7 +93,7 @@ public class TextBuddy {
 				clearItem();
 				break;
 			case DISPLAY_ITEM:
-				showToUserWithoutNewline(testDisplayItem());
+				showToUserWithoutNewline(displayItem());
 				break;
 			case WRONG_COMMAND:
 				wrongCommand(userCommand);
@@ -96,6 +109,7 @@ public class TextBuddy {
 				throw new Error("Unrecognized command type");
 		}
 	}
+	
 	
 	private static String getUserInput(String userCommand) {
 		String input = sc.nextLine().trim();
@@ -131,40 +145,30 @@ public class TextBuddy {
 			OutputStreamWriter outputWriter = new OutputStreamWriter(outFile);
 			BufferedWriter writer = new BufferedWriter(outputWriter);
 			writeToFile(writer);
-			writer.close();
-			outFile.close();
-			outputWriter.close();
+			closeEverything(outFile, outputWriter, writer);
 		} catch (IOException e) {
 			showToUser(UNABLE_TO_WRITE_TO_FILE);
 		}
 	}
+	
+	// close the streams and writer
+	private static void closeEverything(FileOutputStream outFile, OutputStreamWriter outputWriter,
+			BufferedWriter writer) throws IOException {
+		writer.close();
+		outFile.close();
+		outputWriter.close();
+	}
 
 	private static void writeToFile(BufferedWriter writer) throws IOException {
-		int index = 1; 
-		while (index - 1 < list.size()) {
-			String input = index + ". " + list.get(index - 1) + "\n";
+		int index = FIRST_INDEX; 
+		while (index - OFFSET < list.size()) {
+			String input = String.format(FORMAT_FOR_WRITING, index, list.get(index - OFFSET));
 			writer.write(input);
 			index++;
 		}
 	}
-/*	
-	private static void readFile(String fileName) {
-		try {
-			createFile(fileName);
-			FileReader inputFile = new FileReader(fileName);
-			BufferedReader reader = new BufferedReader(inputFile);
-			
-			String currentLine = reader.readLine();
-			while(currentLine != null) {
-				list.add(currentLine);
-				currentLine = reader.readLine();
-			}
-			reader.close();
-		} catch (IOException e) {
-			
-		}
-	}*/
 	
+	// checks if the file exist before creating it
 	private static void createFile(String fileName) {
 		try {
 			File file = new File(fileName);
@@ -172,7 +176,7 @@ public class TextBuddy {
 				file.createNewFile();
 			}
 		} catch (IOException e) {
-			
+			showToUser(UNABLE_TO_CREATE_FILE);
 		}
 	}
 	
@@ -182,28 +186,37 @@ public class TextBuddy {
 	 * if user gives an index that is out of bounds, throw exception
 	 */
 	
-	protected static void deleteItem(String userInput) {
+	private static void deleteItem(String userInput) {
 		try {
 			int indexToDelete = Integer.parseInt(userInput);
-			String itemToBeDeleted = list.get(indexToDelete - 1);
-			list.remove(indexToDelete - 1);
+			String itemToBeDeleted = list.get(indexToDelete - OFFSET);
+			list.remove(indexToDelete - OFFSET);
 			showToUser(String.format(SUCCESS_IN_DELETING_ITEM, fileName, itemToBeDeleted));
 		} catch (IndexOutOfBoundsException e) {
 			showToUser(UNABLE_TO_DELETE);
 		} catch (InputMismatchException e) {
-			sc.nextLine(); // since the input is not a number, we need to consume the remaining line
+			//sc.nextLine(); // since the input is not a number, we need to consume the remaining line
 			showToUser(UNABLE_TO_DELETE);
 		}
 	}
 	
-	protected static String wrongCommand(String command) {
-		//sc.nextLine(); // since the command is wrong, we need to consume the remaining line
+	// public method to test deleteItem method
+	public static void testDeleteItem(String userInput) {
+		deleteItem(userInput);
+	}
+	
+	private static String wrongCommand(String command) {
 		return String.format(UNABLE_TO_PROCESS_COMMAND, command);
-	}	
+	}
+	
+	// public method to test wrongCommand method
+	public static String testWrongCommand(String command) {
+		return wrongCommand(command);
+	}
 
 	// clear the whole list
-	protected static void clearItem() {
-		if (list.size() != 0) {
+	private static void clearItem() {
+		if (list.size() != EMPTY) {
 			list.clear();
 			showToUser(String.format(SUCCESS_IN_CLEARING, fileName));
 		} else {
@@ -211,44 +224,64 @@ public class TextBuddy {
 		}
 	}
 	
-	// print out everything in the list
-	private static void displayItem() {
-		if (list.size() != 0) {
-			int index = 1;
-			while (index - 1 < list.size()){
-				String input = list.get(index - 1);
-				showToUser(String.format(DISPLAY_FORMAT, index, input));
-				index++;
-			}
-		} else {
-			showToUser(String.format(EMPTY_FILE, fileName));
-		}
+	// public method to test clearItem method
+	public static void testClearItem() {
+		clearItem();
 	}
-
-	protected static String testDisplayItem() {
-		if (list.size() != 0) {
-			int index = 1;
-			String output = EMPTY_STRING; 
-			while (index - 1 < list.size()){
-				String input = list.get(index - 1);
-				output += String.format(DISPLAY_FORMAT, index, input);
-				index++;
-			}
+	
+	// prints out everything in the list
+	private static String displayItem() {
+		if (list.size() != EMPTY) {
+			String output = getDisplayItems();
 			return output;
 		} else {
 			return String.format(EMPTY_FILE, fileName);
 		}
 	}
+
+	private static String getDisplayItems() {
+		int index = FIRST_INDEX;
+		String output = EMPTY_STRING; 
+		while (index - OFFSET < list.size()){
+			String input = list.get(index - OFFSET);
+			output += String.format(FORMAT_FOR_DISPLAYING, index, input);
+			index++;
+		}
+		return output;
+	}
 	
-	protected static String searchItem(String itemToBeSearched) {
+	// public method to test displayItem method
+	public static String testDisplayItem() {
+		return displayItem();
+	}
+	
+	private static String searchItem(String itemToBeSearched) {
+		if (list.size() != EMPTY) {
+			String output = getSearchItems(itemToBeSearched);
+			return output;
+		} else {
+			return NOTHING_TO_SEARCH;
+		}
+	}
+	
+	// find the items
+	private static String getSearchItems(String itemToBeSearched) {
 		String output = EMPTY_STRING;
+		int numberIndex = FIRST_INDEX;
 		for (int i = 0; i < list.size(); i++) {
 			if (list.get(i).contains(itemToBeSearched)) {
-				output += list.get(i) + "\n";
+				output += String.format(FORMAT_FOR_SEARCHING, numberIndex, list.get(i));
+				numberIndex++;
 			}
 		}
 		return output;
 	}
+
+	// public method to test searchItem
+	public static String testSearchItem(String itemToBeSearched) {
+		return searchItem(itemToBeSearched);
+	}
+	
 	// ask user for command
 	private static String userGiveCommand() {
 		showCommandToUser(GIVE_YOUR_COMMAND);
@@ -262,7 +295,7 @@ public class TextBuddy {
 	}
 
 	// adds item in
-	protected static void addItem(String userInput) {
+	private static void addItem(String userInput) {
 		if (isNullString(userInput)) {
 			showToUser(NOTHING_TO_ADD);
 		} else {
@@ -271,9 +304,24 @@ public class TextBuddy {
 		}
 	}
 	
-	protected static void sortItems() {
-		Collections.sort(list);
-		showToUser(SUCCESS_IN_SORTING);
+	// public method to test addItem method
+	public static void testAddItem(String userInput) {
+		addItem(userInput);
+	}
+	
+	// sorts the items in the ArrayList
+	private static void sortItems() {
+		if (list.size() != EMPTY) {
+			Collections.sort(list);
+			showToUser(SUCCESS_IN_SORTING);
+		} else {
+			showToUser(NOTHING_TO_SORT);
+		}
+	}
+	
+	// public method to test sortItems method
+	public static void testSortItems() {
+		sortItems();
 	}
 	
 	// check if string is null
