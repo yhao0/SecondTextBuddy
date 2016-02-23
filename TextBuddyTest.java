@@ -38,34 +38,35 @@ public class TextBuddyTest {
 	
 	@Test
 	public void testAddCommand() {
-		buddy.clearItem();
-		buddy.addItem("0");
+		buddy.testClearItem();
+		buddy.testAddItem("0");
 		makeTestList(3);
-		buddy.addItem("1");
-		buddy.addItem("2");
+		buddy.testAddItem("1");
+		buddy.testAddItem("2");
 		assertEquals(arrayList, buddy.list);
 	}
 	
 	@Test
 	public void testClearCommand() {
-		buddy.clearItem();
-		buddy.addItem("0");
+		buddy.testClearItem();
+		// add items into the list before clearing
+		buddy.testAddItem("0"); 
 		makeTestList(3);
-		buddy.addItem("1");
-		buddy.addItem("2");	
+		buddy.testAddItem("1");
+		buddy.testAddItem("2");	
 		assertEquals(arrayList, buddy.list);
-		buddy.clearItem();
+		buddy.testClearItem();
 		assertEquals(0, buddy.list.size());
 	}
 
 	@Test
 	public void testDeleteCommand() {
-		buddy.clearItem();
-		buddy.addItem("0");
-		buddy.addItem("1");
-		buddy.addItem("2");
+		buddy.testClearItem();
+		buddy.testAddItem("0");
+		buddy.testAddItem("1");
+		buddy.testAddItem("2");
 		assertEquals(3, buddy.list.size());
-		buddy.deleteItem("3");
+		buddy.testDeleteItem("3");
 		assertEquals(2, buddy.list.size());
 		makeTestList(2);
 		assertEquals(arrayList, buddy.list);
@@ -73,46 +74,48 @@ public class TextBuddyTest {
 	
 	@Test
 	public void testWrongCommand() {
-		buddy.clearItem();
+		buddy.testClearItem();
 		String test = "wrong is a wrong command input";
-		assertEquals(test, buddy.wrongCommand("wrong"));
+		assertEquals(test, buddy.testWrongCommand("wrong"));
 	}
 	
 	@Test
 	public void testSortCommand() {
-		buddy.clearItem();
-		buddy.addItem("C");
-		buddy.addItem("B");
-		buddy.addItem("A");
-		buddy.sortItems();
+		buddy.testClearItem();
+		buddy.testAddItem("C");
+		buddy.testAddItem("B");
+		buddy.testAddItem("A");
 		arrayList.add("A");
 		arrayList.add("B");
 		arrayList.add("C");
+		assertNotEquals(arrayList, buddy.list);
+		buddy.testSortItems();
 		assertEquals(arrayList, buddy.list);
-		buddy.addItem("A");
+		buddy.testAddItem("A");
 		arrayList.add("A");
 		Collections.sort(arrayList);
-		buddy.sortItems();
+		buddy.testSortItems();
 		assertEquals(arrayList, buddy.list);
 	}
 	
 	@Test
 	public void testDisplayCommand() {
-		buddy.clearItem();
-		buddy.addItem("A");
-		buddy.addItem("B");
+		buddy.testClearItem();
+		buddy.testAddItem("A");
+		buddy.testAddItem("B");
 		String result = "1. A\n2. B\n";
 		assertEquals(result, buddy.testDisplayItem());
 	}
 	
 	@Test
 	public void testSearchCommand() {
-		buddy.clearItem();
-		buddy.addItem("CS2103 CE2");
-		buddy.addItem("CS2105 Assignment 1");
-		buddy.addItem("CS2103 recurring task");
-		buddy.addItem("CS2101 evaluation");
-		String result = "CS2103 CE2\nCS2103 recurring task\n";
-		assertEquals(result, buddy.searchItem("CS2103"));
+		buddy.testClearItem();
+		assertEquals("Nothing to search", buddy.testSearchItem("CS2103"));
+		buddy.testAddItem("CS2103 CE2");
+		buddy.testAddItem("CS2105 Assignment 1");
+		buddy.testAddItem("CS2103 recurring task");
+		buddy.testAddItem("CS2101 evaluation");
+		String result = "1. CS2103 CE2\n2. CS2103 recurring task\n";
+		assertEquals(result, buddy.testSearchItem("CS2103"));
 	}
 }
